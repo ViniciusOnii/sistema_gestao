@@ -31,7 +31,7 @@ O projeto é organizado da seguinte forma:
 
 3. **Instalação das Bibliotecas:** Abra o terminal na pasta do projeto e execute:
 ```
-pip install pymongo pillow bson
+pip install pymongo pillow bson os
 ```
 Obs.: O `tkinter` já vem integrado ao Python em muitas distribuições.
 

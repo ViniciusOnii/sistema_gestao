@@ -96,3 +96,40 @@ Editar
 pip install pymongo pillow bson
 Isso garante que todas as dependências sejam instaladas corretamente.
 
+
+##Partes do Projeto:
+##Dashboard.py
+![image](https://github.com/user-attachments/assets/d17f8727-facc-470a-84e3-13ab7c8fa63e)
+![image](https://github.com/user-attachments/assets/8fb418e4-c544-4d89-bc38-c300502da849)
+
+Parte Principal do Sistema onde você vai conseguir acessar as outras abas
+
+##Employee.py
+![image](https://github.com/user-attachments/assets/a32f3165-a99b-491e-a1d4-4fb821696cba)
+Onde você irá cadastrar os dados do cliente ou funcionario cadastrando suas informações
+
+
+##Suplier.py
+![image](https://github.com/user-attachments/assets/a4a1bbb3-81e8-433c-b578-ed14d04fd4eb)
+Onde você ira cadastrar os fornecedores 
+
+
+#Cateogry.py
+![image](https://github.com/user-attachments/assets/4dbfa2b6-7c1c-4f8f-a993-267b0386f256)
+Onde irá colocar as categorias do seu produto ou qualquer coisa do tipo.
+
+##Products.py
+![image](https://github.com/user-attachments/assets/ca768dc7-235b-4f91-a45d-a08a58e07253)
+#Onde irá adicionar seus produtos ao banco de dados para vender
+
+##Billing.py
+![image](https://github.com/user-attachments/assets/f0c2d548-b824-4745-85ce-aeff419731f0)
+Onde você ira adicionar os produtos que você quer comprar, que está no banco de dados.
+
+##Sales.py
+![image](https://github.com/user-attachments/assets/c9fd4428-da1a-43c3-af2a-f1d29b52b3c5)
+#Onde você irá ver as vendas
+
+
+
+

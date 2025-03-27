@@ -1,146 +1,208 @@
-import pymongo
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk, messagebox
+from pymongo import MongoClient
 
-# Conectar ao MongoDB
-client = pymongo.MongoClient("mongodb://localhost:27017/")
-db = client["employee_management"]
-collection = db["employees"]
-
-
-class EmployeeClass:
+class EmployeeManagementApp:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("850x500+300+150")
         self.root.title("Employee Management System")
-        self.root.config(bg="white")
-
+        self.root.geometry("900x600")  # Tamanho inicial da janela
+        self.root.config(bg="#F4F4F9")
+        
+        # Variáveis de entrada
+        self.emp_no = tk.StringVar()
+        self.name = tk.StringVar()
+        self.email = tk.StringVar()
+        self.address = tk.StringVar()
+        self.gender = tk.StringVar()
+        self.dob = tk.StringVar()
+        self.contact_no = tk.StringVar()
+        self.doj = tk.StringVar()
+        self.password = tk.StringVar()
+        self.user_type = tk.StringVar(value='Admin')
+        self.salary = tk.StringVar()
+        
+        # Configuração do MongoDB
+        self.client = MongoClient("mongodb://localhost:27017/")
+        self.db = self.client["employee_management"]
+        self.collection = self.db["employees"]
+        
+        # Lista de campos: cada item é uma tupla (label, variável, is_combo)
+        # Para campos do tipo combo, definimos True; caso contrário, False.
+        self.fields = [
+            ("Emp No", self.emp_no, False),
+            ("Name", self.name, False),
+            ("Email", self.email, False),
+            ("Address", self.address, False),
+            ("Gender", self.gender, True),
+            ("D.O.B", self.dob, False),
+            ("Contact No", self.contact_no, False),
+            ("D.O.J", self.doj, False),
+            ("Password", self.password, False),
+            ("User Type", self.user_type, True),
+            ("Salary", self.salary, False)
+        ]
+        
         self.create_widgets()
-        self.update_table()
-
+        self.update_treeview()
+    
     def create_widgets(self):
-        Label(self.root, text="Search Employee", font=("Arial", 10, "bold"), bg="white").place(x=20, y=10)
-
-        self.search_by = ttk.Combobox(self.root, values=["Select", "Emp No.", "Name", "Email"], state="readonly")
-        self.search_by.place(x=20, y=40, width=120)
-        self.search_by.current(0)
-
-        self.search_txt = Entry(self.root, bg="lightyellow")
-        self.search_txt.place(x=150, y=40, width=180)
-
-        Button(self.root, text="Search", bg="green", fg="white", command=self.search).place(x=340, y=38, width=80)
-
-        Label(self.root, text="Employee Details", font=("Arial", 12, "bold"), bg="navy", fg="white").place(x=0, y=80, relwidth=1)
-
-        self.fields = ["Emp No.", "Name", "Email", "Address", "Gender", "D.O.B", "Password", "Salary", "Contact No", "D.O.J", "User Type"]
-
-        self.entries = {}
-        for idx, field in enumerate(self.fields):
-            x = 20 + (idx % 4) * 200
-            y = 120 + (idx // 4) * 40
-
-            Label(self.root, text=field, font=("Arial", 10), bg="white").place(x=x, y=y)
-
-            if field in ["Gender", "User Type"]:
-                options = ["Select", "Male", "Female"] if field == "Gender" else ["Select", "Admin", "Employee"]
-                self.entries[field] = ttk.Combobox(self.root, values=options, state="readonly")
-                self.entries[field].current(0)
-            else:
-                self.entries[field] = Entry(self.root, bg="lightyellow")
-
-            self.entries[field].place(x=x + 80, y=y, width=100)
-
-        Button(self.root, text="Save", command=self.add_employee, bg="blue", fg="white").place(x=300, y=250, width=80)
-        Button(self.root, text="Update", command=self.update_employee, bg="green", fg="white").place(x=390, y=250, width=80)
-        Button(self.root, text="Delete", command=self.delete_employee, bg="red", fg="white").place(x=480, y=250, width=80)
-        Button(self.root, text="Clear", command=self.clear_fields, bg="gray", fg="white").place(x=570, y=250, width=80)
-
-        emp_frame = Frame(self.root, bd=3, relief=RIDGE)
-        emp_frame.place(x=0, y=300, relwidth=1, height=180)
-
-        self.EmployeeTable = ttk.Treeview(emp_frame, columns=self.fields, show="headings")
-        self.EmployeeTable.pack(fill=BOTH, expand=1)
-
-        for field in self.fields:
-            self.EmployeeTable.heading(field, text=field)
-            self.EmployeeTable.column(field, width=100)
-
-        self.EmployeeTable.bind("<ButtonRelease-1>", self.fill_fields)
-
-    def add_employee(self):
-        data = {field: self.entries[field].get() for field in self.fields}
-
-        if any(v == "" or v == "Select" for v in data.values()):
-            messagebox.showerror("Error", "All fields are required.", parent=self.root)
-            return
-
-        collection.insert_one(data)
-        messagebox.showinfo("Success", "Employee added successfully.", parent=self.root)
-        self.update_table()
-        self.clear_fields()
-
-    def update_table(self):
-        self.EmployeeTable.delete(*self.EmployeeTable.get_children())
-        for emp in collection.find({}, {"_id": 0}):
-            self.EmployeeTable.insert("", END, values=tuple(emp.values()))
-
-    def fill_fields(self, event):
-        selected = self.EmployeeTable.focus()
-        values = self.EmployeeTable.item(selected, "values")
-
-        for idx, field in enumerate(self.fields):
-            self.entries[field].delete(0, END)
-            self.entries[field].insert(0, values[idx])
-
+        main_frame = tk.Frame(self.root, bg="#F4F4F9")
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        # Título centralizado
+        title = tk.Label(main_frame, text="Employee Management", 
+                         font=("Arial", 20, "bold"), bg="#F4F4F9")
+        title.pack(pady=15)
+        
+        # Frame para os campos de entrada (estilo Bootstrap com 3 colunas por linha)
+        fields_frame = tk.Frame(main_frame, bg="#F4F4F9")
+        fields_frame.pack(fill=tk.X, pady=10)
+        
+        num_cols = 3
+        num_fields = len(self.fields)
+        num_rows = (num_fields + num_cols - 1) // num_cols  # Calcula quantas linhas serão necessárias
+        
+        field_index = 0
+        for r in range(num_rows):
+            row_frame = tk.Frame(fields_frame, bg="#F4F4F9")
+            row_frame.pack(fill=tk.X, pady=5)
+            # Cada linha terá até 3 colunas
+            for c in range(num_cols):
+                if field_index < num_fields:
+                    label_text, var, is_combo = self.fields[field_index]
+                    # Container para cada campo (coluna)
+                    col_frame = tk.Frame(row_frame, bg="#F4F4F9")
+                    col_frame.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=10)
+                    
+                    # Label do campo
+                    tk.Label(col_frame, text=label_text, font=("Arial", 12), 
+                             bg="#F4F4F9").pack(anchor="w")
+                    
+                    # Campo de entrada ou Combobox
+                    if is_combo:
+                        # Definindo os valores conforme o campo
+                        values = ["Male", "Female"] if label_text == "Gender" else ["Admin", "Employee"]
+                        ttk.Combobox(col_frame, textvariable=var, font=("Arial", 12),
+                                     values=values, state="readonly").pack(fill=tk.X)
+                    else:
+                        tk.Entry(col_frame, textvariable=var, font=("Arial", 12)).pack(fill=tk.X)
+                    
+                    field_index += 1
+        
+        # Frame para os botões de ação
+        button_frame = tk.Frame(main_frame, bg="#F4F4F9")
+        button_frame.pack(pady=20)
+        
+        btn_texts = ["Save", "Update", "Delete", "Clear"]
+        commands = [self.save_employee, self.update_employee, self.delete_employee, self.clear_fields]
+        colors = ["#4CAF50", "#2196F3", "#F44336", "#FFC107"]
+        
+        for text, cmd, color in zip(btn_texts, commands, colors):
+            tk.Button(button_frame, text=text, command=cmd, font=("Arial", 12, "bold"),
+                      bg=color, fg="white").pack(side=tk.LEFT, padx=10)
+        
+        # Frame para a Treeview (tabela de dados)
+        tree_frame = tk.Frame(main_frame, bg="#F4F4F9")
+        tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        columns = [field[0] for field in self.fields]
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings")
+        for col in columns:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, anchor="center", width=100)
+        self.tree.pack(fill=tk.BOTH, expand=True)
+        self.tree.bind("<ButtonRelease-1>", self.load_selected_employee)
+    
+    def save_employee(self):
+        data = {
+            "Emp No": self.emp_no.get(),
+            "Name": self.name.get(),
+            "Email": self.email.get(),
+            "Address": self.address.get(),
+            "Gender": self.gender.get(),
+            "D.O.B": self.dob.get(),
+            "Contact No": self.contact_no.get(),
+            "D.O.J": self.doj.get(),
+            "Password": self.password.get(),
+            "User Type": self.user_type.get(),
+            "Salary": self.salary.get()
+        }
+        self.collection.insert_one(data)
+        self.update_treeview()
+    
+    def update_treeview(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for employee in self.collection.find():
+            values = (
+                employee.get("Emp No", ""),
+                employee.get("Name", ""),
+                employee.get("Email", ""),
+                employee.get("Address", ""),
+                employee.get("Gender", ""),
+                employee.get("D.O.B", ""),
+                employee.get("Contact No", ""),
+                employee.get("D.O.J", ""),
+                employee.get("Password", ""),
+                employee.get("User Type", ""),
+                employee.get("Salary", "")
+            )
+            self.tree.insert("", tk.END, values=values)
+    
     def update_employee(self):
-        selected = self.EmployeeTable.focus()
-        if not selected:
-            messagebox.showerror("Error", "Select an employee to update.", parent=self.root)
-            return
-
-        emp_id = self.EmployeeTable.item(selected, "values")[0]
-        data = {field: self.entries[field].get() for field in self.fields}
-
-        if any(v == "" or v == "Select" for v in data.values()):
-            messagebox.showerror("Error", "All fields are required.", parent=self.root)
-            return
-
-        collection.update_one({"Emp No.": emp_id}, {"$set": data})
-        messagebox.showinfo("Success", "Employee updated successfully.", parent=self.root)
-        self.update_table()
-        self.clear_fields()
-
+        selected_item = self.tree.selection()
+        if selected_item:
+            selected_emp_no = self.tree.item(selected_item)["values"][0]
+            updated_data = {
+                "Matrícula": self.emp_no.get(),
+                "Nome": self.name.get(),
+                "E-mail": self.email.get(),
+                "Endereço": self.address.get(),
+                "Sexo": self.gender.get(),
+                "Dt. Nasc.": self.dob.get(),
+                "Telefone": self.contact_no.get(),
+                "Dt. Adm.": self.doj.get(),
+                "Senha": self.password.get(),
+                "Tipo de Usuário": self.user_type.get(),
+                "Salário": self.salary.get()
+            }
+            self.collection.update_one({"Emp No": selected_emp_no}, {"$set": updated_data})
+            self.update_treeview()
+        else:
+            messagebox.showwarning("Seleção", "Por favor, selecione um funcionário para atualizar.")
+    
     def delete_employee(self):
-        selected = self.EmployeeTable.focus()
-        if not selected:
-            messagebox.showerror("Error", "Select an employee to delete.", parent=self.root)
-            return
-
-        emp_id = self.EmployeeTable.item(selected, "values")[0]
-        collection.delete_one({"Emp No.": emp_id})
-        messagebox.showinfo("Success", "Employee deleted successfully.", parent=self.root)
-        self.update_table()
-
+        selected_item = self.tree.selection()
+        if selected_item:
+            selected_emp_no = self.tree.item(selected_item)["values"][0]
+            self.collection.delete_one({"Emp No": selected_emp_no})
+            self.update_treeview()
+        else:
+            messagebox.showwarning("Seleção", "Por favor, selecione um funcionário para excluir.")
+    
+    def load_selected_employee(self, event):
+        selected_item = self.tree.selection()
+        if selected_item:
+            employee = self.tree.item(selected_item)["values"]
+            self.emp_no.set(employee[0])
+            self.name.set(employee[1])
+            self.email.set(employee[2])
+            self.address.set(employee[3])
+            self.gender.set(employee[4])
+            self.dob.set(employee[5])
+            self.contact_no.set(employee[6])
+            self.doj.set(employee[7])
+            self.password.set(employee[8])
+            self.user_type.set(employee[9])
+            self.salary.set(employee[10])
+    
     def clear_fields(self):
-        for entry in self.entries.values():
-            entry.delete(0, END)
-
-    def search(self):
-        field = self.search_by.get()
-        value = self.search_txt.get()
-
-        if field == "Select" or not value:
-            messagebox.showerror("Error", "Please select a field and enter a value.", parent=self.root)
-            return
-
-        results = collection.find({field: value}, {"_id": 0})
-
-        self.EmployeeTable.delete(*self.EmployeeTable.get_children())
-        for emp in results:
-            self.EmployeeTable.insert("", END, values=tuple(emp.values()))
-
+        for var in [self.emp_no, self.name, self.email, self.address, self.gender, 
+                    self.dob, self.contact_no, self.doj, self.password, self.user_type, self.salary]:
+            var.set("")
 
 if __name__ == "__main__":
-    root = Tk()
-    app = EmployeeClass(root)
+    root = tk.Tk()
+    app = EmployeeManagementApp(root)
     root.mainloop()
